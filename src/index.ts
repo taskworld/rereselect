@@ -128,9 +128,6 @@ export function createSelectionContext<State>(): SelectorContext<State> {
         if (currentStateVersion === cachedResult.stateVersion) {
           return cachedResult.value
         }
-        if (!cachedResult.dependencies) {
-          return cachedResult.value
-        }
         let changed = false
         for (const [selector, value] of cachedResult.dependencies.entries()) {
           if (selector(state) !== value) {
@@ -155,6 +152,12 @@ export function createSelectionContext<State>(): SelectorContext<State> {
         { reason }
       )
       const resultValue = selectionLogic(query)
+      if (dependencies.size === 0) {
+        throw new Error(
+          '[rereselect] Selector malfunction: ' +
+            'The selection logic must select some data by calling `query(selector)` at least once.'
+        )
+      }
       cachedResult = {
         stateVersion: currentStateVersion,
         dependencies,

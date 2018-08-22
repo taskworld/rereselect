@@ -1,8 +1,9 @@
 {
   "scripts": {
     "clean": "rm -rf lib lib-es6",
-    "test": "yarn jest",
-    "prepare": "yarn clean && yarn tsc && yarn tsc --build tsconfig.es6.json"
+    "test": "jest",
+    "test:cov": "jest --config jest.config.ts.js --coverage",
+    "prepare": "yarn clean && tsc && tsc --build tsconfig.es6.json"
   },
   "devDependencies": {
     "@types/jest": "^23.3.1",
@@ -10,6 +11,7 @@
     "jest": "^23.5.0",
     "matcha": "^0.7.0",
     "reselect": "^3.0.1",
+    "ts-jest": "^23.1.4",
     "typescript": "^3.0.1"
   },
   "name": "@taskworld.com/rereselect",
