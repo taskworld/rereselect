@@ -36,10 +36,11 @@ export type EnhancedSelector<State, Result> = Selector<State, Result> & {
   resetRecomputations(): number
 
   /**
-   * Like calling the selector, but instead of returning the selected
-   * data, also return the internal state.
+   * Returns the internal state of the selector.
+   * Internal state is generated after the selector is computed/recomputed.
+   * For debugging purposes.
    */
-  introspect(state: State): InternalSelectorState<State, Result>
+  introspect(): InternalSelectorState<State, Result> | undefined
 }
 
 type InternalSelectorState<State, Result> = {
@@ -149,10 +150,7 @@ export function createSelectionContext<State>(): SelectorContext<State> {
         selectionLogic: selectionLogic,
         recomputations: () => recomputations,
         resetRecomputations: () => (recomputations = 0),
-        introspect: (state: State) => {
-          enhancedSelector(state)
-          return cachedResult!
-        }
+        introspect: () => cachedResult
       }
     )
 
