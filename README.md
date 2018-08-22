@@ -29,7 +29,7 @@ Note:
 The Reselect “shopping cart” example:
 
 ```js
-import { makeSelector } from 'rereselect'
+import { makeSelector } from '@taskworld.com/rereselect'
 
 // “Simple” selectors are the same.
 const shopItemsSelector = state => state.shop.items
