@@ -8,21 +8,27 @@
 A library that generates memoized selectors like
 [Reselect](https://github.com/reduxjs/reselect) but:
 
-- Comes with dynamic dependency tracking à la Vue/VueX/MobX.
+- **Supports dynamic dependency tracking** à la Vue/VueX/MobX. See
+  [my StackOverflow answer](https://stackoverflow.com/a/51973044) for the
+  motivation why we need this.
 - No need to declare upfront which selectors will be used.
 - Effectively solves
-  [this problem](https://stackoverflow.com/questions/50965013/reselect-selector-that-invokes-another-selector).
-- Introspection (hooks) API to help debug performance problems.
+  [this issue](https://stackoverflow.com/questions/50965013/reselect-selector-that-invokes-another-selector).
+- Introspection (hooks) API baked in to help debug performance problems.
 
-Design constraints:
+**Design constraints:**
 
 - Generated selector must be compatible with Reselect.
 
-Note:
+**Notes:**
 
 - Requires an ES6 environment (or babel-polyfill).
 - The state must be immutable.
-- The selector logic must be deterministic.
+- The selector logic must be pure and deterministic.
+- **No support.** This library is created to solve the problems we face. We
+  open-source it in hope that it will be useful to others as well, but we have
+  no plans in supporting it beyond our use cases. Therefore, feature requests
+  are not accepted here.
 
 ## Differences from Reselect?
 
