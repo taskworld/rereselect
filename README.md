@@ -21,6 +21,8 @@ Design constraints:
 Note:
 
 - Requires an ES6 environment (or babel-polyfill).
+- The state must be immutable.
+- The selector logic must be deterministic.
 
 ## Differences from Reselect?
 
@@ -34,8 +36,11 @@ const shopItemsSelector = state => state.shop.items
 const taxPercentSelector = state => state.shop.taxPercent
 
 // Instead of `createSelector`, it is called `makeSelector`.
-// Instead of declaring dependencies upfront,
-// the `query` function can be used to call other selectors.
+//
+// Instead of declaring dependencies upfront, use the `query` function
+// can be used to invoke other selectors. In doing so, the dependency
+// will automatically be tracked.
+//
 const subtotalSelector = makeSelector(query =>
   query(shopItemsSelector).reduce((acc, item) => acc + item.value, 0)
 )
@@ -69,8 +74,8 @@ const selectSelectedFruits = makeSelector(query =>
 // Use like any other selectors:
 console.log(selectSelectedFruits(state)) // [ { name: 'Apple' }, { name: 'Cantaloupe' } ]
 
-// Since all data selection is fine-grained,
-// changes to unrelated parts of the state will not cause a recomputation.
+// Since data selection is fine-grained, changes to unrelated parts
+// of the state will not cause a recomputation.
 state = {
   ...state,
   fruits: {
