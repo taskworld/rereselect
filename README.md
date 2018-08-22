@@ -12,8 +12,6 @@ A library that generates memoized selectors like
   [my StackOverflow answer](https://stackoverflow.com/a/51973044) for the
   motivation why we need this.
 - No need to declare upfront which selectors will be used.
-- Effectively solves
-  [this issue](https://stackoverflow.com/questions/50965013/reselect-selector-that-invokes-another-selector).
 - Introspection (hooks) API baked in to help debug performance problems.
 
 **Design constraints:**
