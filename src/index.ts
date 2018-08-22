@@ -10,6 +10,11 @@ export type SelectorContext<State> = {
   makeSelector<Result>(
     selectionLogic: SelectionLogic<State, Result>
   ): EnhancedSelector<State, Result>
+
+  /**
+   * Sets a wrapper function. This allows intercepting selector calls.
+   */
+  setWrapper(wrapper: WrapperFunction<State>)
 }
 
 /**
@@ -62,19 +67,25 @@ export type SelectionLogic<State, Result> = (
   query: QueryFunction<State>
 ) => Result
 
-type WrapperFunction<State> = <Result>(
-  executeSelector: () => Result,
-  selector: EnhancedSelector<State, Result>,
+export type WrapperFunction<State> = (
+  executeSelector: () => any,
+  selector: EnhancedSelector<State, any>,
   state: State
-) => Result
+) => any
 
 /**
  * QueryFunction can be used to invoke another selector and mark
  * that selector as a dependency.
  */
-export type QueryFunction<State> = (<Result>(
-  selector: Selector<State, Result>
-) => Result)
+export type QueryFunction<State> = {
+  <Result>(selector: Selector<State, Result>): Result
+
+  /**
+   * The earliest selector that caused the selector result to be
+   * invalidated.
+   */
+  reason: Selector<State, any> | undefined
+}
 
 /**
  * Selects the state.
@@ -104,6 +115,7 @@ export function createSelectionContext<State>(): SelectorContext<State> {
         latestSelection.version += 1
       }
       const currentStateVersion = latestSelection.version
+      let reason
       if (cachedResult) {
         if (currentStateVersion === cachedResult.stateVersion) {
           return cachedResult.value
@@ -115,6 +127,7 @@ export function createSelectionContext<State>(): SelectorContext<State> {
         for (const [selector, value] of cachedResult.dependencies.entries()) {
           if (selector(state) !== value) {
             changed = true
+            reason = selector
             break
           }
         }
@@ -124,12 +137,15 @@ export function createSelectionContext<State>(): SelectorContext<State> {
       }
       recomputations += 1
       const dependencies = new Map<Selector<State, any>, any>()
-      const query: QueryFunction<State> = selector => {
-        if (dependencies.has(selector)) return dependencies.get(selector)
-        const value = selector(state)
-        dependencies.set(selector, value)
-        return value
-      }
+      const query: QueryFunction<State> = Object.assign(
+        (selector: Selector<State, any>) => {
+          if (dependencies.has(selector)) return dependencies.get(selector)
+          const value = selector(state)
+          dependencies.set(selector, value)
+          return value
+        },
+        { reason }
+      )
       const resultValue = selectionLogic(query)
       cachedResult = {
         stateVersion: currentStateVersion,
@@ -158,7 +174,10 @@ export function createSelectionContext<State>(): SelectorContext<State> {
   }
 
   return {
-    makeSelector
+    makeSelector,
+    setWrapper: fn => {
+      wrapper = fn
+    }
   }
 }
 
