@@ -37,6 +37,10 @@ jobs:
           name: benchmark
           command: |
             yarn benchmark
+      - run:
+          name: codecov
+          command: |
+            curl -s https://codecov.io/bash | bash
       - store_test_results:
           path: /tmp/circleci-test-results
       - store_artifacts:
