@@ -36,7 +36,7 @@ jobs:
       - run:
           name: benchmark
           command: |
-            node benchmark.js
+            yarn benchmark
       - store_test_results:
           path: /tmp/circleci-test-results
       - store_artifacts:
