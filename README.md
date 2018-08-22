@@ -38,8 +38,8 @@ const taxPercentSelector = state => state.shop.taxPercent
 // Instead of `createSelector`, it is called `makeSelector`.
 //
 // Instead of declaring dependencies upfront, use the `query` function
-// can be used to invoke other selectors. In doing so, the dependency
-// will automatically be tracked.
+// to invoke other selectors. In doing so, the dependency will
+// automatically be tracked.
 //
 const subtotalSelector = makeSelector(query =>
   query(shopItemsSelector).reduce((acc, item) => acc + item.value, 0)
