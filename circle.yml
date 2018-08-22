@@ -33,6 +33,10 @@ jobs:
           name: test (source)
           command: |
             yarn test:cov
+      - run:
+          name: benchmark
+          command: |
+            node benchmark.js
       - store_test_results:
           path: /tmp/circleci-test-results
       - store_artifacts:
