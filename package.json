@@ -16,7 +16,7 @@
   },
   "name": "@taskworld.com/rereselect",
   "description": "A library that generates memoized selectors and supports dynamic dependency tracking.",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "main": "lib/index.js",
   "directories": {
     "example": "examples",
