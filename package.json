@@ -12,7 +12,7 @@
     "reselect": "^3.0.1",
     "typescript": "^3.0.1"
   },
-  "name": "rereselect",
+  "name": "@taskworld.com/rereselect",
   "description": "A library that generates memoized selectors and supports dynamic dependency tracking.",
   "version": "0.0.1",
   "main": "lib/index.js",
