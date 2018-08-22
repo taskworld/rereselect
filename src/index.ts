@@ -13,6 +13,14 @@ export type SelectorContext<State> = {
 
   /**
    * Sets a wrapper function. This allows intercepting selector calls.
+   * The wrapper function **MUST** return the result of calling
+   * `executedSelector` function, or the whole thing will break down.
+   *
+   * For example:
+   *
+   *     context.setWrapper(executeSelector => {
+   *       return executeSelector()
+   *     })
    */
   setWrapper(wrapper: WrapperFunction<State>): void
 }
