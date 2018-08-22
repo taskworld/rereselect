@@ -1,0 +1,34 @@
+{
+  "scripts": {
+    "clean": "rm -rf lib lib-es6",
+    "test": "yarn jest",
+    "prepare": "yarn clean && yarn tsc && yarn tsc --build tsconfig.es6.json"
+  },
+  "devDependencies": {
+    "@types/jest": "^23.3.1",
+    "@types/node": "^10.7.1",
+    "jest": "^23.5.0",
+    "matcha": "^0.7.0",
+    "reselect": "^3.0.1",
+    "typescript": "^3.0.1"
+  },
+  "name": "rereselect",
+  "description": "A library that generates memoized selectors and supports dynamic dependency tracking.",
+  "version": "0.0.1",
+  "main": "lib/index.js",
+  "directories": {
+    "example": "examples",
+    "lib": "lib"
+  },
+  "dependencies": {},
+  "author": "Thai Pangsakulyanont <thai.p@taskworld.com> (http://dt.in.th/)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/taskworld/rereselect.git"
+  },
+  "bugs": {
+    "url": "https://github.com/taskworld/rereselect/issues"
+  },
+  "homepage": "https://github.com/taskworld/rereselect#readme"
+}
