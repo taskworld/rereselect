@@ -105,29 +105,53 @@ export const selectState: <State>(state: State) => State = state => state
  * `makeSelector` function.
  */
 export function createSelectionContext<State>(): SelectorContext<State> {
+  // To prevent memory leak, we avoid storing reference to the whole state
+  // tree inside each selector. Instead, we store the version number of
+  // the input.
   let latestSelection: { state: State; version: number } | undefined
+
+  // A wrapper may be set to intercept selector calls (e.g. for debugging
+  // or profiling purposes)
   let wrapper: WrapperFunction<State> | undefined
 
   function makeSelector<Result>(
     selectionLogic: SelectionLogic<State, Result>
   ): EnhancedSelector<State, Result> {
     let recomputations = 0
+
+    /**
+     * The result of previous computation
+     */
     let cachedResult: InternalSelectorState<State, Result> | undefined
 
     function select(state: State): Result {
+      // Set up initial global state.
       if (!latestSelection) {
         latestSelection = { state: state, version: 1 }
       }
+
+      // Increment state version if state changed.
       if (latestSelection.state !== state) {
         latestSelection.state = state
         latestSelection.version += 1
       }
+
       const currentStateVersion = latestSelection.version
-      let reason
+
+      /**
+       * In the 1st computation, `reason` will be undefined. In subsequent
+       * recomputations, `reason` will be the selector which caused the
+       * invalidation of cached result.
+       */
+      let reason: Selector<State, any> | undefined
+
       if (cachedResult) {
+        // Short-circuit: input state tree is the same
         if (currentStateVersion === cachedResult.stateVersion) {
           return cachedResult.value
         }
+
+        // Check if dependencies changed
         let changed = false
         for (const [selector, value] of cachedResult.dependencies.entries()) {
           if (selector(state) !== value) {
@@ -140,8 +164,13 @@ export function createSelectionContext<State>(): SelectorContext<State> {
           return cachedResult.value
         }
       }
+
+      // At this point, either it’s the 1st computation, or one of the
+      // dependencies must have changed its result.
       recomputations += 1
+
       const dependencies = new Map<Selector<State, any>, any>()
+
       const query: QueryFunction<State> = Object.assign(
         (selector: Selector<State, any>) => {
           if (dependencies.has(selector)) return dependencies.get(selector)
@@ -151,18 +180,24 @@ export function createSelectionContext<State>(): SelectorContext<State> {
         },
         { reason }
       )
+
       const resultValue = selectionLogic(query)
+
+      // Require that a selection logic must make at least one call to `query`.
       if (dependencies.size === 0) {
         throw new Error(
           '[rereselect] Selector malfunction: ' +
             'The selection logic must select some data by calling `query(selector)` at least once.'
         )
       }
+
+      // Memoize the result.
       cachedResult = {
         stateVersion: currentStateVersion,
         dependencies,
         value: resultValue
       }
+
       return resultValue
     }
 
