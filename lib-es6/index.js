@@ -23,6 +23,7 @@ function createSelectionContext() {
                 latestSelection.version += 1;
             }
             const currentStateVersion = latestSelection.version;
+            let reason;
             if (cachedResult) {
                 if (currentStateVersion === cachedResult.stateVersion) {
                     return cachedResult.value;
@@ -34,6 +35,7 @@ function createSelectionContext() {
                 for (const [selector, value] of cachedResult.dependencies.entries()) {
                     if (selector(state) !== value) {
                         changed = true;
+                        reason = selector;
                         break;
                     }
                 }
@@ -43,13 +45,13 @@ function createSelectionContext() {
             }
             recomputations += 1;
             const dependencies = new Map();
-            const query = selector => {
+            const query = Object.assign((selector) => {
                 if (dependencies.has(selector))
                     return dependencies.get(selector);
                 const value = selector(state);
                 dependencies.set(selector, value);
                 return value;
-            };
+            }, { reason });
             const resultValue = selectionLogic(query);
             cachedResult = {
                 stateVersion: currentStateVersion,
@@ -67,15 +69,15 @@ function createSelectionContext() {
             selectionLogic: selectionLogic,
             recomputations: () => recomputations,
             resetRecomputations: () => (recomputations = 0),
-            introspect: (state) => {
-                enhancedSelector(state);
-                return cachedResult;
-            }
+            introspect: () => cachedResult
         });
         return enhancedSelector;
     }
     return {
-        makeSelector
+        makeSelector,
+        setWrapper: fn => {
+            wrapper = fn;
+        }
     };
 }
 exports.createSelectionContext = createSelectionContext;

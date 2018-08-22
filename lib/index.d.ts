@@ -8,6 +8,10 @@ export declare type SelectorContext<State> = {
      * automatically.
      */
     makeSelector<Result>(selectionLogic: SelectionLogic<State, Result>): EnhancedSelector<State, Result>;
+    /**
+     * Sets a wrapper function. This allows intercepting selector calls.
+     */
+    setWrapper(wrapper: WrapperFunction<State>): void;
 };
 /**
  * Selector selects some data from the state tree.
@@ -29,10 +33,11 @@ export declare type EnhancedSelector<State, Result> = Selector<State, Result> & 
      */
     resetRecomputations(): number;
     /**
-     * Like calling the selector, but instead of returning the selected
-     * data, also return the internal state.
+     * Returns the internal state of the selector.
+     * Internal state is generated after the selector is computed/recomputed.
+     * For debugging purposes.
      */
-    introspect(state: State): InternalSelectorState<State, Result>;
+    introspect(): InternalSelectorState<State, Result> | undefined;
 };
 declare type InternalSelectorState<State, Result> = {
     stateVersion: number;
@@ -50,11 +55,19 @@ export declare type SelectionLogic<State, Result> = (
  * Executes another selector and mark it as a dependency.
  */
 query: QueryFunction<State>) => Result;
+export declare type WrapperFunction<State> = (executeSelector: () => any, selector: EnhancedSelector<State, any>, state: State) => any;
 /**
  * QueryFunction can be used to invoke another selector and mark
  * that selector as a dependency.
  */
-export declare type QueryFunction<State> = (<Result>(selector: Selector<State, Result>) => Result);
+export declare type QueryFunction<State> = {
+    <Result>(selector: Selector<State, Result>): Result;
+    /**
+     * The earliest selector that caused the selector result to be
+     * invalidated.
+     */
+    reason: Selector<State, any> | undefined;
+};
 /**
  * Selects the state.
  */

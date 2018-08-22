@@ -14,7 +14,7 @@ export type SelectorContext<State> = {
   /**
    * Sets a wrapper function. This allows intercepting selector calls.
    */
-  setWrapper(wrapper: WrapperFunction<State>)
+  setWrapper(wrapper: WrapperFunction<State>): void
 }
 
 /**
