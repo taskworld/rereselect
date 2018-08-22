@@ -1,15 +1,44 @@
-type SelectorContext<State> = {
+export type SelectorContext<State> = {
+  /**
+   * makeSelector creates a selector based on given selectionLogic.
+   *
+   * @param selectionLogic - The selection logic. It will be passed a
+   * function `query` which you can call to invoke other selectors.
+   * By doing so, the dependencies between selectors will be tracked
+   * automatically.
+   */
   makeSelector<Result>(
     selectionLogic: SelectionLogic<State, Result>
   ): EnhancedSelector<State, Result>
 }
 
-type Selector<State, Result> = (state: State) => Result
+/**
+ * Selector selects some data from the state tree.
+ */
+export type Selector<State, Result> = (state: State) => Result
 
-type EnhancedSelector<State, Result> = Selector<State, Result> & {
+/**
+ * EnhancedSelector is a selector function returned by `makeSelector`.
+ * It comes with extra methods to help you introspect.
+ */
+export type EnhancedSelector<State, Result> = Selector<State, Result> & {
   selectionLogic: SelectionLogic<State, Result>
+
+  /**
+   * recomputations returns the number of times this selector
+   * has to recompute its output.
+   */
   recomputations(): number
+
+  /**
+   * resetRecomputations resets the recomputations counter to 0.
+   */
   resetRecomputations(): number
+
+  /**
+   * Like calling the selector, but instead of returning the selected
+   * data, also return the internal state.
+   */
   introspect(state: State): InternalSelectorState<State, Result>
 }
 
@@ -23,16 +52,23 @@ type SelectionLogic<State, Result> = (query: QueryFunction<State>) => Result
 
 type WrapperFunction<State> = <Result>(
   executeSelector: () => Result,
-  selectionLogic: SelectionLogic<State, Result>,
-  selector: Selector<State, Result>
+  selector: EnhancedSelector<State, Result>,
+  state: State
 ) => Result
 
 type QueryFunction<State> = (<Result>(
   selector: Selector<State, Result>
 ) => Result)
 
+/**
+ * Selects the state.
+ */
 export const selectState: <State>(state: State) => State = state => state
 
+/**
+ * Creates a new context for selection. Useful if you want a statically-typed
+ * `makeSelector` function.
+ */
 export function createSelectionContext<State>(): SelectorContext<State> {
   let latestSelection: { state: State; version: number } | undefined
   let wrapper: WrapperFunction<State> | undefined
@@ -86,21 +122,26 @@ export function createSelectionContext<State>(): SelectorContext<State> {
       }
       return resultValue
     }
-    function selector(state: State): Result {
-      if (!wrapper) {
-        return select(state)
+
+    const enhancedSelector = Object.assign(
+      function selector(state: State): Result {
+        if (!wrapper) {
+          return select(state)
+        }
+        return wrapper(() => select(state), enhancedSelector, state)
+      },
+      {
+        selectionLogic: selectionLogic,
+        recomputations: () => recomputations,
+        resetRecomputations: () => (recomputations = 0),
+        introspect: (state: State) => {
+          enhancedSelector(state)
+          return cachedResult!
+        }
       }
-      return wrapper(() => select(state), selectionLogic, selector)
-    }
-    return Object.assign(selector, {
-      selectionLogic: selectionLogic,
-      recomputations: () => recomputations,
-      resetRecomputations: () => (recomputations = 0),
-      introspect: (state: State) => {
-        selector(state)
-        return cachedResult!
-      }
-    })
+    )
+
+    return enhancedSelector
   }
 
   return {

@@ -1,6 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * Selects the state.
+ */
 exports.selectState = state => state;
+/**
+ * Creates a new context for selection. Useful if you want a statically-typed
+ * `makeSelector` function.
+ */
 function createSelectionContext() {
     let latestSelection;
     let wrapper;
@@ -51,21 +58,21 @@ function createSelectionContext() {
             };
             return resultValue;
         }
-        function selector(state) {
+        const enhancedSelector = Object.assign(function selector(state) {
             if (!wrapper) {
                 return select(state);
             }
-            return wrapper(() => select(state), selectionLogic, selector);
-        }
-        return Object.assign(selector, {
+            return wrapper(() => select(state), enhancedSelector, state);
+        }, {
             selectionLogic: selectionLogic,
             recomputations: () => recomputations,
             resetRecomputations: () => (recomputations = 0),
             introspect: (state) => {
-                selector(state);
+                enhancedSelector(state);
                 return cachedResult;
             }
         });
+        return enhancedSelector;
     }
     return {
         makeSelector
