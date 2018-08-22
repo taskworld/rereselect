@@ -48,7 +48,18 @@ type InternalSelectorState<State, Result> = {
   dependencies: Map<Selector<State, any>, any>
 }
 
-type SelectionLogic<State, Result> = (query: QueryFunction<State>) => Result
+/**
+ * The selection logic to be passed to `makeSelector`. It will be passed a
+ * function `query` which you can call to invoke other selectors.
+ * By doing so, the dependencies between selectors will be tracked
+ * automatically.
+ */
+export type SelectionLogic<State, Result> = (
+  /**
+   * Executes another selector and mark it as a dependency.
+   */
+  query: QueryFunction<State>
+) => Result
 
 type WrapperFunction<State> = <Result>(
   executeSelector: () => Result,
@@ -56,7 +67,11 @@ type WrapperFunction<State> = <Result>(
   state: State
 ) => Result
 
-type QueryFunction<State> = (<Result>(
+/**
+ * QueryFunction can be used to invoke another selector and mark
+ * that selector as a dependency.
+ */
+export type QueryFunction<State> = (<Result>(
   selector: Selector<State, Result>
 ) => Result)
 
@@ -150,4 +165,13 @@ export function createSelectionContext<State>(): SelectorContext<State> {
 }
 
 const defaultContext = createSelectionContext<any>()
-export const { makeSelector } = defaultContext
+
+/**
+ * makeSelector creates a selector based on given selectionLogic.
+ *
+ * @param selectionLogic - The selection logic. It will be passed a
+ * function `query` which you can call to invoke other selectors.
+ * By doing so, the dependencies between selectors will be tracked
+ * automatically.
+ */
+export const makeSelector = defaultContext.makeSelector

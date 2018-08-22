@@ -80,5 +80,13 @@ function createSelectionContext() {
 }
 exports.createSelectionContext = createSelectionContext;
 const defaultContext = createSelectionContext();
+/**
+ * makeSelector creates a selector based on given selectionLogic.
+ *
+ * @param selectionLogic - The selection logic. It will be passed a
+ * function `query` which you can call to invoke other selectors.
+ * By doing so, the dependencies between selectors will be tracked
+ * automatically.
+ */
 exports.makeSelector = defaultContext.makeSelector;
 //# sourceMappingURL=index.js.map
