@@ -21,8 +21,12 @@ A library that generates memoized selectors like
 **Notes:**
 
 - Requires an ES6 environment (or babel-polyfill).
+- TypeScript typings require TypeScript 3.0.
 - The state must be immutable.
 - The selector logic must be pure and deterministic.
+- rereselect’s selectors take 1 argument only — the state. If you need
+  parameterized selectors, see the section
+  [parameterized selectors](#parameterized-selectors).
 - **No support.** This library is created to solve the problems we face. We
   open-source it in hope that it will be useful to others as well, but we have
   no plans in supporting it beyond our use cases. Therefore, feature requests
@@ -89,4 +93,35 @@ state = {
 }
 console.log(selectSelectedFruits(state)) // [ { name: 'Apple' }, { name: 'Cantaloupe' } ]
 console.log(selectSelectedFruits.recomputations()) // 1
+```
+
+## Parameterized selectors
+
+This library is only concerned with creating a selector system that supports
+dynamic dependency tracking. So, it is up to you to implement parameterized
+selectors support.
+
+This is how we do it (we also added `displayName` property to our selectors to
+make them easier to debug):
+
+```typescript
+export function makeParameterizedSelector(
+  displayName,
+  selectionLogicGenerator
+) {
+  const memoized = new Map()
+  return Object.assign(
+    function selectorFactory(...args) {
+      const key = args.join(',')
+      if (memoized.has(key)) return memoized.get(key)!
+      const name = `${displayName}(${key})`
+      const selectionLogic = selectionLogicGenerator(...args)
+      const selector = makeSelector(selectionLogic)
+      selector.displayName = name
+      memoized.set(key, selector)
+      return selector
+    },
+    { displayName }
+  )
+}
 ```
