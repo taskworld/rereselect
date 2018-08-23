@@ -97,21 +97,25 @@ test('tracing hooks (setWrapper)', () => {
     name: string,
     logic: SelectionLogic<typeof state, T>
   ) => {
-    return Object.assign(
-      context.makeSelector(query => {
-        const suffix = query.reason
-          ? ` [invalidated by ${selectorName(query.reason)}]`
-          : ' [first run]'
-        return runWithLog(`COMPUTE ${name}${suffix}`, () => logic(query))
-      }),
-      { displayName: name }
-    )
+    return Object.assign(context.makeSelector(logic), { displayName: name })
   }
   const selectorName = (selector: any) =>
     String(selector.displayName || selector.name || selector.toString())
       .replace(/\s+/g, ' ')
       .trim()
 
+  // Set up wrappers
+  context.setInvocationWrapper((execute, selector) => {
+    return runWithLog('INVOKE ' + selectorName(selector), execute)
+  })
+  context.setComputationWrapper((compute, selector, state, reason) => {
+    const suffix = reason
+      ? ` [invalidated by ${selectorName(reason)}]`
+      : ' [first run]'
+    return runWithLog(`COMPUTE ${selectorName(selector)}${suffix}`, compute)
+  })
+
+  // Act
   const selectOnlineUserIds = makeNamedSelector('selectOnlineUserIds', query =>
     query(state => state.onlineUserIds)
   )
@@ -123,10 +127,6 @@ test('tracing hooks (setWrapper)', () => {
   const selectOnlineUsers = makeNamedSelector('selectOnlineUsers', query =>
     query(selectOnlineUserIds).map(id => query(selectUserById(id)))
   )
-
-  context.setWrapper((execute, selector) => {
-    return runWithLog('INVOKE ' + (selector as any).displayName, execute)
-  })
 
   log.push('Initial state (no one online)')
   selectOnlineUsers(state)
@@ -153,6 +153,7 @@ test('tracing hooks (setWrapper)', () => {
   }
   selectOnlineUsers(state)
 
+  // Assert
   expect(log).toMatchInlineSnapshot(`
 Array [
   "Initial state (no one online)",

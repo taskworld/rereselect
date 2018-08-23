@@ -12,9 +12,9 @@ export type SelectorContext<State> = {
   ): EnhancedSelector<State, Result>
 
   /**
-   * Sets a wrapper function. This allows intercepting selector calls.
-   * The wrapper function **MUST** return the result of calling
-   * `executedSelector` function, or the whole thing will break down.
+   * Sets an invocation wrapper function. This allows intercepting when a
+   * selector is invoked. The wrapper function **MUST** return the result of
+   * calling `executeSelector` function, or the whole thing will break down.
    *
    * For example:
    *
@@ -22,7 +22,20 @@ export type SelectorContext<State> = {
    *       return executeSelector()
    *     })
    */
-  setWrapper(wrapper: WrapperFunction<State>): void
+  setInvocationWrapper(wrapper: InvocationWrapper<State>): void
+
+  /**
+   * Sets an computation wrapper function. This allows intercepting when a
+   * selector is recomputed. The wrapper function **MUST** return the result of
+   * calling `computeResult` function, or the whole thing will break down.
+   *
+   * For example:
+   *
+   *     context.setComputationWrapper(computeResult => {
+   *       return computeResult()
+   *     })
+   */
+  setComputationWrapper(wrapper: ComputationWrapper<State>): void
 }
 
 /**
@@ -75,10 +88,17 @@ export type SelectionLogic<State, Result> = (
   query: QueryFunction<State>
 ) => Result
 
-export type WrapperFunction<State> = (
+export type InvocationWrapper<State> = (
   executeSelector: () => any,
   selector: EnhancedSelector<State, any>,
   state: State
+) => any
+
+export type ComputationWrapper<State> = (
+  computeResult: () => any,
+  selector: EnhancedSelector<State, any>,
+  state: State,
+  reason: Selector<State, any> | undefined
 ) => any
 
 /**
@@ -110,9 +130,10 @@ export function createSelectionContext<State>(): SelectorContext<State> {
   // the input.
   let latestSelection: { state: State; version: number } | undefined
 
-  // A wrapper may be set to intercept selector calls (e.g. for debugging
-  // or profiling purposes)
-  let wrapper: WrapperFunction<State> | undefined
+  // A wrapper may be set to intercept selector invocations and computations
+  // (e.g. for debugging, tracing or profiling purposes)
+  let invocationWrapper: InvocationWrapper<State> | undefined
+  let computationWrapper: ComputationWrapper<State> | undefined
 
   function makeSelector<Result>(
     selectionLogic: SelectionLogic<State, Result>
@@ -181,7 +202,14 @@ export function createSelectionContext<State>(): SelectorContext<State> {
         { reason }
       )
 
-      const resultValue = selectionLogic(query)
+      const resultValue = computationWrapper
+        ? computationWrapper(
+            () => selectionLogic(query),
+            enhancedSelector,
+            state,
+            reason
+          )
+        : selectionLogic(query)
 
       // Require that a selection logic must make at least one call to `query`.
       if (dependencies.size === 0) {
@@ -195,7 +223,7 @@ export function createSelectionContext<State>(): SelectorContext<State> {
       cachedResult = {
         stateVersion: currentStateVersion,
         dependencies,
-        value: resultValue
+        value: resultValue,
       }
 
       return resultValue
@@ -203,16 +231,16 @@ export function createSelectionContext<State>(): SelectorContext<State> {
 
     const enhancedSelector = Object.assign(
       function selector(state: State): Result {
-        if (!wrapper) {
+        if (!invocationWrapper) {
           return select(state)
         }
-        return wrapper(() => select(state), enhancedSelector, state)
+        return invocationWrapper(() => select(state), enhancedSelector, state)
       },
       {
         selectionLogic: selectionLogic,
         recomputations: () => recomputations,
         resetRecomputations: () => (recomputations = 0),
-        introspect: () => cachedResult
+        introspect: () => cachedResult,
       }
     )
 
@@ -221,9 +249,12 @@ export function createSelectionContext<State>(): SelectorContext<State> {
 
   return {
     makeSelector,
-    setWrapper: fn => {
-      wrapper = fn
-    }
+    setInvocationWrapper: fn => {
+      invocationWrapper = fn
+    },
+    setComputationWrapper: fn => {
+      computationWrapper = fn
+    },
   }
 }
 

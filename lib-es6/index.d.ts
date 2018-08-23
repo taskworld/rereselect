@@ -9,9 +9,9 @@ export declare type SelectorContext<State> = {
      */
     makeSelector<Result>(selectionLogic: SelectionLogic<State, Result>): EnhancedSelector<State, Result>;
     /**
-     * Sets a wrapper function. This allows intercepting selector calls.
-     * The wrapper function **MUST** return the result of calling
-     * `executedSelector` function, or the whole thing will break down.
+     * Sets an invocation wrapper function. This allows intercepting when a
+     * selector is invoked. The wrapper function **MUST** return the result of
+     * calling `executeSelector` function, or the whole thing will break down.
      *
      * For example:
      *
@@ -19,7 +19,19 @@ export declare type SelectorContext<State> = {
      *       return executeSelector()
      *     })
      */
-    setWrapper(wrapper: WrapperFunction<State>): void;
+    setInvocationWrapper(wrapper: InvocationWrapper<State>): void;
+    /**
+     * Sets an computation wrapper function. This allows intercepting when a
+     * selector is recomputed. The wrapper function **MUST** return the result of
+     * calling `computeResult` function, or the whole thing will break down.
+     *
+     * For example:
+     *
+     *     context.setComputationWrapper(computeResult => {
+     *       return computeResult()
+     *     })
+     */
+    setComputationWrapper(wrapper: ComputationWrapper<State>): void;
 };
 /**
  * Selector selects some data from the state tree.
@@ -63,7 +75,8 @@ export declare type SelectionLogic<State, Result> = (
  * Executes another selector and mark it as a dependency.
  */
 query: QueryFunction<State>) => Result;
-export declare type WrapperFunction<State> = (executeSelector: () => any, selector: EnhancedSelector<State, any>, state: State) => any;
+export declare type InvocationWrapper<State> = (executeSelector: () => any, selector: EnhancedSelector<State, any>, state: State) => any;
+export declare type ComputationWrapper<State> = (computeResult: () => any, selector: EnhancedSelector<State, any>, state: State, reason: Selector<State, any> | undefined) => any;
 /**
  * QueryFunction can be used to invoke another selector and mark
  * that selector as a dependency.

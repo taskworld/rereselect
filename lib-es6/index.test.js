@@ -2,6 +2,14 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const index_1 = require("./index");
 const lodash_1 = require("lodash");
+expect.addSnapshotSerializer({
+    test(val) {
+        return typeof val === 'function' && val.displayName;
+    },
+    print(val) {
+        return `[Function ${val.displayName}]`;
+    },
+});
 test('basic selector', () => {
     const context = index_1.createSelectionContext();
     const selector = context.makeSelector(query => query(state => state.a));
@@ -46,7 +54,7 @@ test('query does not track duplicate dependencies and remembers results', () => 
     expect(countA).toEqual(1);
     expect(countB).toEqual(1);
 });
-test('introspecting', () => {
+test('tracing hooks (setWrapper)', () => {
     let state = {
         onlineUserIds: [],
         users: {
@@ -58,6 +66,7 @@ test('introspecting', () => {
         },
     };
     const context = index_1.createSelectionContext();
+    // Logging/tracing utilities.
     const log = [];
     let depth = 0;
     const runWithLog = (text, f) => {
@@ -70,17 +79,30 @@ test('introspecting', () => {
             depth--;
         }
     };
+    // At Taskworld we want to be able to profile and debug our selectors.
+    // That’s why we require all selectors to have names. Instead of
+    // creating selectors using `makeSelector`, we use `makeNamedSelector`
+    // instead.
     const makeNamedSelector = (name, logic) => {
-        return Object.assign(context.makeSelector(query => {
-            return runWithLog(`COMPUTE ${name}`, () => logic(query));
-        }), { displayName: name });
+        return Object.assign(context.makeSelector(logic), { displayName: name });
     };
+    const selectorName = (selector) => String(selector.displayName || selector.name || selector.toString())
+        .replace(/\s+/g, ' ')
+        .trim();
+    // Set up wrappers
+    context.setInvocationWrapper((execute, selector) => {
+        return runWithLog('INVOKE ' + selectorName(selector), execute);
+    });
+    context.setComputationWrapper((compute, selector, state, reason) => {
+        const suffix = reason
+            ? ` [invalidated by ${selectorName(reason)}]`
+            : ' [first run]';
+        return runWithLog(`COMPUTE ${selectorName(selector)}${suffix}`, compute);
+    });
+    // Act
     const selectOnlineUserIds = makeNamedSelector('selectOnlineUserIds', query => query(state => state.onlineUserIds));
     const selectUserById = lodash_1.memoize((id) => makeNamedSelector(`selectUserById(${id})`, query => query(state => state.users[id])));
     const selectOnlineUsers = makeNamedSelector('selectOnlineUsers', query => query(selectOnlineUserIds).map(id => query(selectUserById(id))));
-    context.setWrapper((execute, selector) => {
-        return runWithLog('INVOKE ' + selector.displayName, execute);
-    });
     log.push('Initial state (no one online)');
     selectOnlineUsers(state);
     log.push('Alice and Eve is online');
@@ -95,23 +117,24 @@ test('introspecting', () => {
     log.push('Alice info changed');
     state = Object.assign({}, state, { users: Object.assign({}, state.users, { alice: { name: 'Alice in wonderland' } }) });
     selectOnlineUsers(state);
+    // Assert
     expect(log).toMatchInlineSnapshot(`
 Array [
   "Initial state (no one online)",
   "| INVOKE selectOnlineUsers",
-  "| | COMPUTE selectOnlineUsers",
+  "| | COMPUTE selectOnlineUsers [first run]",
   "| | | INVOKE selectOnlineUserIds",
-  "| | | | COMPUTE selectOnlineUserIds",
+  "| | | | COMPUTE selectOnlineUserIds [first run]",
   "Alice and Eve is online",
   "| INVOKE selectOnlineUsers",
   "| | INVOKE selectOnlineUserIds",
-  "| | | COMPUTE selectOnlineUserIds",
-  "| | COMPUTE selectOnlineUsers",
+  "| | | COMPUTE selectOnlineUserIds [invalidated by state => state.onlineUserIds]",
+  "| | COMPUTE selectOnlineUsers [invalidated by selectOnlineUserIds]",
   "| | | INVOKE selectOnlineUserIds",
   "| | | INVOKE selectUserById(alice)",
-  "| | | | COMPUTE selectUserById(alice)",
+  "| | | | COMPUTE selectUserById(alice) [first run]",
   "| | | INVOKE selectUserById(eve)",
-  "| | | | COMPUTE selectUserById(eve)",
+  "| | | | COMPUTE selectUserById(eve) [first run]",
   "Bob’s info changed",
   "| INVOKE selectOnlineUsers",
   "| | INVOKE selectOnlineUserIds",
@@ -120,22 +143,54 @@ Array [
   "Eve is offline, Charlie is online",
   "| INVOKE selectOnlineUsers",
   "| | INVOKE selectOnlineUserIds",
-  "| | | COMPUTE selectOnlineUserIds",
-  "| | COMPUTE selectOnlineUsers",
+  "| | | COMPUTE selectOnlineUserIds [invalidated by state => state.onlineUserIds]",
+  "| | COMPUTE selectOnlineUsers [invalidated by selectOnlineUserIds]",
   "| | | INVOKE selectOnlineUserIds",
   "| | | INVOKE selectUserById(alice)",
   "| | | INVOKE selectUserById(charlie)",
-  "| | | | COMPUTE selectUserById(charlie)",
+  "| | | | COMPUTE selectUserById(charlie) [first run]",
   "Alice info changed",
   "| INVOKE selectOnlineUsers",
   "| | INVOKE selectOnlineUserIds",
   "| | INVOKE selectUserById(alice)",
-  "| | | COMPUTE selectUserById(alice)",
-  "| | COMPUTE selectOnlineUsers",
+  "| | | COMPUTE selectUserById(alice) [invalidated by state => state.users[id]]",
+  "| | COMPUTE selectOnlineUsers [invalidated by selectUserById(alice)]",
   "| | | INVOKE selectOnlineUserIds",
   "| | | INVOKE selectUserById(alice)",
   "| | | INVOKE selectUserById(charlie)",
 ]
+`);
+});
+test('resetting computation count', () => {
+    const context = index_1.createSelectionContext();
+    const selector = context.makeSelector(query => query(state => state.a));
+    expect(selector({ a: 2 })).toEqual(2);
+    expect(selector.recomputations()).toEqual(1);
+    selector.resetRecomputations();
+    expect(selector.recomputations()).toEqual(0);
+    expect(selector({ a: 3 })).toEqual(3);
+    expect(selector.recomputations()).toEqual(1);
+});
+test('introspection api', () => {
+    const context = index_1.createSelectionContext();
+    const selectA = (state) => state.a;
+    Object.assign(selectA, { displayName: 'selectA' });
+    const selectB = (state) => state.b;
+    Object.assign(selectB, { displayName: 'selectB' });
+    const selector = context.makeSelector(query => {
+        return query(selectA) + query(selectB) * query(selectA);
+    });
+    Object.assign(selector, { displayName: 'selector' });
+    expect(selector({ a: 2, b: 3 })).toEqual(8);
+    expect(selector.introspect()).toMatchInlineSnapshot(`
+Object {
+  "dependencies": Map {
+    [Function selectA] => 2,
+    [Function selectB] => 3,
+  },
+  "stateVersion": 1,
+  "value": 8,
+}
 `);
 });
 //# sourceMappingURL=index.test.js.map

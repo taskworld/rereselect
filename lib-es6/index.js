@@ -13,9 +13,10 @@ function createSelectionContext() {
     // tree inside each selector. Instead, we store the version number of
     // the input.
     let latestSelection;
-    // A wrapper may be set to intercept selector calls (e.g. for debugging
-    // or profiling purposes)
-    let wrapper;
+    // A wrapper may be set to intercept selector invocations and computations
+    // (e.g. for debugging, tracing or profiling purposes)
+    let invocationWrapper;
+    let computationWrapper;
     function makeSelector(selectionLogic) {
         let recomputations = 0;
         /**
@@ -68,7 +69,9 @@ function createSelectionContext() {
                 dependencies.set(selector, value);
                 return value;
             }, { reason });
-            const resultValue = selectionLogic(query);
+            const resultValue = computationWrapper
+                ? computationWrapper(() => selectionLogic(query), enhancedSelector, state, reason)
+                : selectionLogic(query);
             // Require that a selection logic must make at least one call to `query`.
             if (dependencies.size === 0) {
                 throw new Error('[rereselect] Selector malfunction: ' +
@@ -78,28 +81,31 @@ function createSelectionContext() {
             cachedResult = {
                 stateVersion: currentStateVersion,
                 dependencies,
-                value: resultValue
+                value: resultValue,
             };
             return resultValue;
         }
         const enhancedSelector = Object.assign(function selector(state) {
-            if (!wrapper) {
+            if (!invocationWrapper) {
                 return select(state);
             }
-            return wrapper(() => select(state), enhancedSelector, state);
+            return invocationWrapper(() => select(state), enhancedSelector, state);
         }, {
             selectionLogic: selectionLogic,
             recomputations: () => recomputations,
             resetRecomputations: () => (recomputations = 0),
-            introspect: () => cachedResult
+            introspect: () => cachedResult,
         });
         return enhancedSelector;
     }
     return {
         makeSelector,
-        setWrapper: fn => {
-            wrapper = fn;
-        }
+        setInvocationWrapper: fn => {
+            invocationWrapper = fn;
+        },
+        setComputationWrapper: fn => {
+            computationWrapper = fn;
+        },
     };
 }
 exports.createSelectionContext = createSelectionContext;
