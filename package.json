@@ -3,6 +3,7 @@
     "clean": "rm -rf lib lib-es6",
     "test": "jest",
     "test:cov": "jest --config jest.config.ts.js --coverage",
+    "test:watch": "jest --config jest.config.ts.js --watch",
     "prepare": "yarn clean && tsc && tsc --build tsconfig.es6.json",
     "benchmark": "matcha benchmark.js"
   },

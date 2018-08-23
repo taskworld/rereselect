@@ -66,6 +66,8 @@ test('introspecting', () => {
   }
 
   const context = createSelectionContext<typeof state>()
+
+  // Logging/tracing utilities.
   const log: string[] = []
   let depth = 0
   const runWithLog = <T>(text: string, f: () => T) => {
@@ -78,17 +80,28 @@ test('introspecting', () => {
     }
   }
 
+  // At Taskworld we want to be able to profile and debug our selectors.
+  // That’s why we require all selectors to have names. Instead of
+  // creating selectors using `makeSelector`, we use `makeNamedSelector`
+  // instead.
   const makeNamedSelector = <T>(
     name: string,
     logic: SelectionLogic<typeof state, T>
   ) => {
     return Object.assign(
       context.makeSelector(query => {
-        return runWithLog(`COMPUTE ${name}`, () => logic(query))
+        const suffix = query.reason
+          ? ` [invalidated by ${selectorName(query.reason)}]`
+          : ' [first run]'
+        return runWithLog(`COMPUTE ${name}${suffix}`, () => logic(query))
       }),
       { displayName: name }
     )
   }
+  const selectorName = (selector: any) =>
+    String(selector.displayName || selector.name || selector.toString())
+      .replace(/\s+/g, ' ')
+      .trim()
 
   const selectOnlineUserIds = makeNamedSelector('selectOnlineUserIds', query =>
     query(state => state.onlineUserIds)
@@ -135,19 +148,19 @@ test('introspecting', () => {
 Array [
   "Initial state (no one online)",
   "| INVOKE selectOnlineUsers",
-  "| | COMPUTE selectOnlineUsers",
+  "| | COMPUTE selectOnlineUsers [first run]",
   "| | | INVOKE selectOnlineUserIds",
-  "| | | | COMPUTE selectOnlineUserIds",
+  "| | | | COMPUTE selectOnlineUserIds [first run]",
   "Alice and Eve is online",
   "| INVOKE selectOnlineUsers",
   "| | INVOKE selectOnlineUserIds",
-  "| | | COMPUTE selectOnlineUserIds",
-  "| | COMPUTE selectOnlineUsers",
+  "| | | COMPUTE selectOnlineUserIds [invalidated by state => state.onlineUserIds]",
+  "| | COMPUTE selectOnlineUsers [invalidated by selectOnlineUserIds]",
   "| | | INVOKE selectOnlineUserIds",
   "| | | INVOKE selectUserById(alice)",
-  "| | | | COMPUTE selectUserById(alice)",
+  "| | | | COMPUTE selectUserById(alice) [first run]",
   "| | | INVOKE selectUserById(eve)",
-  "| | | | COMPUTE selectUserById(eve)",
+  "| | | | COMPUTE selectUserById(eve) [first run]",
   "Bob’s info changed",
   "| INVOKE selectOnlineUsers",
   "| | INVOKE selectOnlineUserIds",
@@ -156,18 +169,18 @@ Array [
   "Eve is offline, Charlie is online",
   "| INVOKE selectOnlineUsers",
   "| | INVOKE selectOnlineUserIds",
-  "| | | COMPUTE selectOnlineUserIds",
-  "| | COMPUTE selectOnlineUsers",
+  "| | | COMPUTE selectOnlineUserIds [invalidated by state => state.onlineUserIds]",
+  "| | COMPUTE selectOnlineUsers [invalidated by selectOnlineUserIds]",
   "| | | INVOKE selectOnlineUserIds",
   "| | | INVOKE selectUserById(alice)",
   "| | | INVOKE selectUserById(charlie)",
-  "| | | | COMPUTE selectUserById(charlie)",
+  "| | | | COMPUTE selectUserById(charlie) [first run]",
   "Alice info changed",
   "| INVOKE selectOnlineUsers",
   "| | INVOKE selectOnlineUserIds",
   "| | INVOKE selectUserById(alice)",
-  "| | | COMPUTE selectUserById(alice)",
-  "| | COMPUTE selectOnlineUsers",
+  "| | | COMPUTE selectUserById(alice) [invalidated by state => state.users[id]]",
+  "| | COMPUTE selectOnlineUsers [invalidated by selectUserById(alice)]",
   "| | | INVOKE selectOnlineUserIds",
   "| | | INVOKE selectUserById(alice)",
   "| | | INVOKE selectUserById(charlie)",
