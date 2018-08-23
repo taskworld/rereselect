@@ -187,8 +187,8 @@ latest results there.
 
 This library is only concerned with creating a selector system that supports
 dynamic dependency tracking. It provides a building blocks for which
-higher-level abstractions can be built upon. So, it is up to you to implement
-parameterized selectors support.
+higher-level abstractions can be built upon. So, it is up to you to built your
+tooling on top of this.
 
 Please [read the test](src/index.test.ts) to see some of the real-world usage
 scenarios.
