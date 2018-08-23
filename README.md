@@ -1,5 +1,16 @@
 # rereselect
 
+[![npm package][npm-badge]][npm] [![CircleCI builds][build-badge]][build]  [![Codecov][cov-badge]][cov]
+
+[build-badge]: https://img.shields.io/circleci/project/github/taskworld/rereselect/master.svg?style=for-the-badge
+[build]: https://circleci.com/gh/taskworld/rereselect
+
+[npm-badge]: https://img.shields.io/npm/v/@taskworld.com/rereselect.svg?style=for-the-badge
+[npm]: https://www.npmjs.com/package/@taskworld.com/rereselect
+
+[cov-badge]: https://img.shields.io/codecov/c/github/taskworld/rereselect/master.svg?style=for-the-badge
+[cov]: https://codecov.io/gh/taskworld/rereselect
+
 > Not to be confused with
 > [Re-reselect](https://github.com/toomuchdesign/re-reselect) which is an
 > enhancement to [Reselect](https://github.com/reduxjs/reselect). This is an
