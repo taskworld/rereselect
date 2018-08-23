@@ -168,6 +168,21 @@ function createSelector(...funcs) {
 }
 ```
 
+### Performance comparison
+
+As of `v0.3.0`, in “cache hit” scenarios, rereselect is faster than Reselect in
+ES6 environment.
+
+| Scenario                         |        Reselect | rereselect<br />ES5 | rereselect<br />ES6 |
+| -------------------------------- | --------------: | ------------------: | ------------------: |
+| Cache hit (same state)           | 20,179,150 op/s |     28,732,249 op/s |     25,217,954 op/s |
+| Cache hit (shallowly equal deps) |  4,510,002 op/s |     12,158,890 op/s |      2,958,739 op/s |
+| Cache miss                       |  2,966,281 op/s |      2,439,733 op/s |      1,631,106 op/s |
+
+Performance benchmarks are run as part of
+[CI build](https://circleci.com/gh/taskworld/rereselect). You can check out the
+latest results there.
+
 ## Build your own abstraction
 
 This library is only concerned with creating a selector system that supports
