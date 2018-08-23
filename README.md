@@ -75,7 +75,7 @@ const selectOnlineUsers = createSelector(
 
 This works, but this means that changes to unrelated users (`bob`, `charlie`,
 `eve`) will cause the selector to be recomputed. This problem has been
-[asked](https://stackoverflow.com/a/51973044)
+[asked](https://stackoverflow.com/q/50965013/559913)
 [multiple](https://github.com/reduxjs/reselect/issues/353)
 [times](https://github.com/reduxjs/reselect/issues/360) with no efficient and
 elegant solution.
@@ -91,7 +91,9 @@ const selectOnlineUsers = makeSelector(query => {
 ```
 
 The selection logic will receive a function `query` which can be used to invoke
-other selectors. In doing so, the dependency will be tracked automatically.
+other selectors. In doing so, the dependency will be tracked automatically. This
+allows more fine-grained control over which part of the state tree would cause
+the selector to be recomputed.
 
 ![](./docs/images/example-usage.png)
 
