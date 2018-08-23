@@ -90,8 +90,8 @@ const selectOnlineUsers = makeSelector(query => {
 })
 ```
 
-When the selector is run, the state dependencies will be collected
-automatically.
+The selection logic will receive a function `query` which can be used to invoke
+other selectors. In doing so, the dependency will be tracked automatically.
 
 ![](./docs/images/example-usage.png)
 
