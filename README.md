@@ -1,14 +1,16 @@
 # rereselect
 
-[![npm package][npm-badge]][npm] [![CircleCI builds][build-badge]][build]  [![Codecov][cov-badge]][cov]
+[![npm package][npm-badge]][npm] [![CircleCI builds][build-badge]][build]
+[![Codecov][cov-badge]][cov]
 
-[build-badge]: https://img.shields.io/circleci/project/github/taskworld/rereselect/master.svg?style=for-the-badge
+[build-badge]:
+  https://img.shields.io/circleci/project/github/taskworld/rereselect/master.svg?style=for-the-badge
 [build]: https://circleci.com/gh/taskworld/rereselect
-
-[npm-badge]: https://img.shields.io/npm/v/@taskworld.com/rereselect.svg?style=for-the-badge
+[npm-badge]:
+  https://img.shields.io/npm/v/@taskworld.com/rereselect.svg?style=for-the-badge
 [npm]: https://www.npmjs.com/package/@taskworld.com/rereselect
-
-[cov-badge]: https://img.shields.io/codecov/c/github/taskworld/rereselect/master.svg?style=for-the-badge
+[cov-badge]:
+  https://img.shields.io/codecov/c/github/taskworld/rereselect/master.svg?style=for-the-badge
 [cov]: https://codecov.io/gh/taskworld/rereselect
 
 > Not to be confused with
@@ -19,9 +21,8 @@
 A library that generates memoized selectors like
 [Reselect](https://github.com/reduxjs/reselect) but:
 
-- **Supports dynamic dependency tracking** à la Vue/VueX/MobX. See
-  [my StackOverflow answer](https://stackoverflow.com/a/51973044) for the
-  motivation why we need this.
+- **Supports dynamic dependency tracking** à la Vue/VueX/MobX. Read
+  [the motivation section](#motivation) to see why we need this.
 - No need to declare upfront which selectors will be used.
 - Introspection (hooks) API baked in to help debug performance problems.
 
@@ -43,7 +44,57 @@ A library that generates memoized selectors like
   no plans in supporting it beyond our use cases. Therefore, feature requests
   are not accepted here.
 
-## Differences from Reselect?
+## Motivation
+
+Why a new selector library?
+
+Here’s an example.
+
+Let’s say… we want to select a list of online users, as in this example:
+
+![A selector that selects a list of online users. It depends on `state.onlineUserIds` and for each user ID in the latter, `state.users[name]`.](./docs/images/fine-grained.png)
+
+However, in Reselect, **selectors must declare their dependencies statically
+upfront.** Since we don’t know in advance which users will be online, we need to
+declare a dependency on the whole `users` branch of the state tree:
+
+![Instead of depending only on relevant users, we had to depend on the whole `state.users` branch.](./docs/images/limitation.png)
+
+This results in a selector that looks like this:
+
+```js
+const selectOnlineUsers = createSelector(
+  state => state.onlineUserIds,
+  state => state.users,
+  (onlineUserIds, users) => {
+    return onlineUserIds.map(id => users[id])
+  }
+)
+```
+
+This works, but this means that changes to unrelated users (`bob`, `charlie`,
+`eve`) will cause the selector to be recomputed. This problem has been
+[asked](https://stackoverflow.com/a/51973044)
+[multiple](https://github.com/reduxjs/reselect/issues/353)
+[times](https://github.com/reduxjs/reselect/issues/360) with no efficient and
+elegant solution.
+
+With **rereselect**, selectors don’t declare their dependencies upfront.
+Instead, they are inlined in the selection logic:
+
+```js
+const selectOnlineUsers = makeSelector(query => {
+  const userIds = query(state => state.onlineUserIds)
+  return userIds.map(id => query(state => state.users[id]))
+})
+```
+
+When the selector is run, the state dependencies will be collected
+automatically.
+
+![](./docs/images/example-usage.png)
+
+## Differences from Reselect
 
 The Reselect “shopping cart” example:
 
@@ -67,7 +118,7 @@ const taxSelector = makeSelector(
   query => query(subtotalSelector) * (query(taxPercentSelector) / 100)
 )
 const totalSelector = makeSelector(query => ({
-  total: query(subtotalSelector) + query(taxSelector)
+  total: query(subtotalSelector) + query(taxSelector),
 }))
 ```
 
@@ -78,9 +129,9 @@ let state = {
   fruits: {
     a: { name: 'Apple' },
     b: { name: 'Banana' },
-    c: { name: 'Cantaloupe' }
+    c: { name: 'Cantaloupe' },
   },
-  selectedFruitIds: ['a', 'c']
+  selectedFruitIds: ['a', 'c'],
 }
 
 // I want to query the selected fruits...
@@ -99,18 +150,31 @@ state = {
   ...state,
   fruits: {
     ...state.fruits,
-    b: { name: 'Blueberry' }
-  }
+    b: { name: 'Blueberry' },
+  },
 }
 console.log(selectSelectedFruits(state)) // [ { name: 'Apple' }, { name: 'Cantaloupe' } ]
 console.log(selectSelectedFruits.recomputations()) // 1
 ```
 
-## Parameterized selectors
+Reimplementing Reselect’s `createSelector` on top of `rereselect`:
+
+```js
+function createSelector(...funcs) {
+  const resultFunc = funcs.pop()
+  const dependencies = Array.isArray(funcs[0]) ? funcs[0] : funcs
+  return makeSelector(query => resultFunc(...dependencies.map(query)))
+}
+```
+
+## Build your own abstraction
 
 This library is only concerned with creating a selector system that supports
-dynamic dependency tracking. So, it is up to you to implement parameterized
-selectors support.
+dynamic dependency tracking. It provides a building blocks for which
+higher-level abstractions can be built upon. So, it is up to you to implement
+parameterized selectors support.
+
+### Parameterized selectors
 
 This is how we do it (we also added `displayName` property to our selectors to
 make them easier to debug):
