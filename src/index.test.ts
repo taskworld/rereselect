@@ -1,6 +1,15 @@
 import { createSelectionContext, makeSelector, SelectionLogic } from './index'
 import { memoize } from 'lodash'
 
+expect.addSnapshotSerializer({
+  test(val) {
+    return typeof val === 'function' && val.displayName
+  },
+  print(val) {
+    return `[Function ${val.displayName}]`
+  },
+})
+
 test('basic selector', () => {
   const context = createSelectionContext<{ a: number }>()
   const selector = context.makeSelector(query => query(state => state.a))
@@ -53,7 +62,7 @@ test('query does not track duplicate dependencies and remembers results', () => 
   expect(countB).toEqual(1)
 })
 
-test('introspecting', () => {
+test('tracing hooks (setWrapper)', () => {
   let state = {
     onlineUserIds: [] as string[],
     users: {
@@ -185,5 +194,42 @@ Array [
   "| | | INVOKE selectUserById(alice)",
   "| | | INVOKE selectUserById(charlie)",
 ]
+`)
+})
+
+test('resetting computation count', () => {
+  const context = createSelectionContext<{ a: number }>()
+  const selector = context.makeSelector(query => query(state => state.a))
+  expect(selector({ a: 2 })).toEqual(2)
+  expect(selector.recomputations()).toEqual(1)
+  selector.resetRecomputations()
+  expect(selector.recomputations()).toEqual(0)
+  expect(selector({ a: 3 })).toEqual(3)
+  expect(selector.recomputations()).toEqual(1)
+})
+
+test('introspection api', () => {
+  const context = createSelectionContext<{ a: number; b: number }>()
+
+  const selectA = (state: { a: number }) => state.a
+  Object.assign(selectA, { displayName: 'selectA' })
+
+  const selectB = (state: { b: number }) => state.b
+  Object.assign(selectB, { displayName: 'selectB' })
+
+  const selector = context.makeSelector(query => {
+    return query(selectA) + query(selectB) * query(selectA)
+  })
+  Object.assign(selector, { displayName: 'selector' })
+  expect(selector({ a: 2, b: 3 })).toEqual(8)
+  expect(selector.introspect()).toMatchInlineSnapshot(`
+Object {
+  "dependencies": Map {
+    [Function selectA] => 2,
+    [Function selectB] => 3,
+  },
+  "stateVersion": 1,
+  "value": 8,
+}
 `)
 })
