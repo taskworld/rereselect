@@ -11,7 +11,7 @@
 [npm]: https://www.npmjs.com/package/@taskworld.com/rereselect
 [cov-badge]:
   https://img.shields.io/codecov/c/github/taskworld/rereselect/master.svg?style=for-the-badge
-[cov]: https://codecov.io/gh/taskworld/rereselect
+[cov]: https://codecov.io/gh/taskworld/rereselect/src/master/src/index.ts
 
 > Not to be confused with
 > [Re-reselect](https://github.com/toomuchdesign/re-reselect) which is an
