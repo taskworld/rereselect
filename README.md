@@ -173,7 +173,7 @@ function createSelector(...funcs) {
 As of `v0.3.0`, in “cache hit” scenarios, rereselect is faster than Reselect in
 ES6 environment.
 
-| Scenario                         |        Reselect | rereselect<br />ES5 | rereselect<br />ES6 |
+| Scenario                         |        Reselect | rereselect<br />ES6 | rereselect<br />ES5 |
 | -------------------------------- | --------------: | ------------------: | ------------------: |
 | Cache hit (same state)           | 20,179,150 op/s |     28,732,249 op/s |     25,217,954 op/s |
 | Cache hit (shallowly equal deps) |  4,510,002 op/s |     12,158,890 op/s |      2,958,739 op/s |
