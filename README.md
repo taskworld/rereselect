@@ -48,15 +48,16 @@ A library that generates memoized selectors like
 
 Why a new selector library?
 
-Here’s an example.
-
-Let’s say… we want to select a list of online users, as in this example:
+Here’s an example. Let’s say we have a list of online user IDs and a mapping
+from user ID to user’s information. We want to select a list of online users, as
+in this example:
 
 ![A selector that selects a list of online users. It depends on `state.onlineUserIds` and for each user ID in the latter, `state.users[name]`.](./docs/images/fine-grained.png)
 
-However, in Reselect, **selectors must declare their dependencies statically
-upfront.** Since we don’t know in advance which users will be online, we need to
-declare a dependency on the whole `users` branch of the state tree:
+Creating such selector is impossible using Reselect, because in Reselect,
+**selectors must declare their dependencies statically upfront.** Since we
+couldn’t know in advance which users will be online, we need to declare a
+dependency on the whole `users` branch of the state tree:
 
 ![Instead of depending only on relevant users, we had to depend on the whole `state.users` branch.](./docs/images/limitation.png)
 
@@ -174,6 +175,9 @@ dynamic dependency tracking. It provides a building blocks for which
 higher-level abstractions can be built upon. So, it is up to you to implement
 parameterized selectors support.
 
+Please [read the test](src/index.test.ts) to see some of the real-world usage
+scenarios.
+
 ### Parameterized selectors
 
 This is how we do it (we also added `displayName` property to our selectors to
@@ -200,3 +204,7 @@ export function makeParameterizedSelector(
   )
 }
 ```
+
+## API
+
+Please [read the test](src/index.test.ts).
