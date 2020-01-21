@@ -43,6 +43,12 @@ A library that generates memoized selectors like
   open-source it in hope that it will be useful to others as well, but we have
   no plans in supporting it beyond our use cases. Therefore, feature requests
   are not accepted here.
+  
+## Installation
+
+```
+npm install @taskworld.com/rereselect
+```
 
 ## Motivation
 
