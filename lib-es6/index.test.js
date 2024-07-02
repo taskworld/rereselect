@@ -86,7 +86,7 @@ test('tracing hooks (setWrapper)', () => {
     const makeNamedSelector = (name, logic) => {
         return Object.assign(context.makeSelector(logic), { displayName: name });
     };
-    const selectorName = (selector) => String(selector.displayName || selector.name || selector.toString())
+    const selectorName = (selector) => String(selector.displayName || selector.name || '[unnamed selector]')
         .replace(/\s+/g, ' ')
         .trim();
     // Set up wrappers
@@ -128,7 +128,7 @@ Array [
   "Alice and Eve is online",
   "| INVOKE selectOnlineUsers",
   "| | INVOKE selectOnlineUserIds",
-  "| | | COMPUTE selectOnlineUserIds [invalidated by state => state.onlineUserIds]",
+  "| | | COMPUTE selectOnlineUserIds [invalidated by [unnamed selector]]",
   "| | COMPUTE selectOnlineUsers [invalidated by selectOnlineUserIds]",
   "| | | INVOKE selectOnlineUserIds",
   "| | | INVOKE selectUserById(alice)",
@@ -143,7 +143,7 @@ Array [
   "Eve is offline, Charlie is online",
   "| INVOKE selectOnlineUsers",
   "| | INVOKE selectOnlineUserIds",
-  "| | | COMPUTE selectOnlineUserIds [invalidated by state => state.onlineUserIds]",
+  "| | | COMPUTE selectOnlineUserIds [invalidated by [unnamed selector]]",
   "| | COMPUTE selectOnlineUsers [invalidated by selectOnlineUserIds]",
   "| | | INVOKE selectOnlineUserIds",
   "| | | INVOKE selectUserById(alice)",
@@ -153,7 +153,7 @@ Array [
   "| INVOKE selectOnlineUsers",
   "| | INVOKE selectOnlineUserIds",
   "| | INVOKE selectUserById(alice)",
-  "| | | COMPUTE selectUserById(alice) [invalidated by state => state.users[id]]",
+  "| | | COMPUTE selectUserById(alice) [invalidated by [unnamed selector]]",
   "| | COMPUTE selectOnlineUsers [invalidated by selectUserById(alice)]",
   "| | | INVOKE selectOnlineUserIds",
   "| | | INVOKE selectUserById(alice)",

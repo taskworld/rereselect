@@ -1,10 +1,10 @@
 {
   "scripts": {
-    "clean": "rm -rf lib lib-es6",
+    "build": "rm -rf lib lib-es6 && tsc && tsc --project tsconfig.es6.json",
     "test": "jest",
     "test:cov": "jest --config jest.config.ts.js --coverage",
     "test:watch": "jest --config jest.config.ts.js --watch",
-    "prepare": "yarn clean && tsc && tsc --build tsconfig.es6.json",
+    "prepare": "pnpm run build",
     "benchmark": "matcha benchmark.js"
   },
   "devDependencies": {
@@ -37,5 +37,6 @@
   "bugs": {
     "url": "https://github.com/taskworld/rereselect/issues"
   },
-  "homepage": "https://github.com/taskworld/rereselect#readme"
+  "homepage": "https://github.com/taskworld/rereselect#readme",
+  "packageManager": "pnpm@9.4.0"
 }
