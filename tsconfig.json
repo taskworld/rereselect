@@ -1,17 +1,17 @@
 {
+  "files": [
+    "src/index.ts",
+  ],
   "compilerOptions": {
     "declaration": true,
     "declarationMap": true,
     "downlevelIteration": true,
-    "lib": ["es2015"],
-    "module": "commonjs",
+    "lib": ["ESNext"],
+    "module": "CommonJS",
     "newLine": "lf",
     "outDir": "lib",
-    "rootDir": "src",
     "sourceMap": true,
     "strict": true,
-    "target": "es5"
-  },
-  "exclude": ["node_modules", "**/node_modules/*"],
-  "include": ["src"]
+    "target": "ES2015"
+  }
 }

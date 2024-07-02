@@ -1,12 +1,13 @@
 import { createSelectionContext, makeSelector, SelectionLogic } from './index'
 import { memoize } from 'lodash'
+import { test, expect } from 'vitest'
 
 expect.addSnapshotSerializer({
   test(val) {
     return typeof val === 'function' && val.displayName
   },
   print(val) {
-    return `[Function ${val.displayName}]`
+    return `[Function ${(val as any).displayName}]`
   },
 })
 
@@ -155,7 +156,7 @@ test('tracing hooks (setWrapper)', () => {
 
   // Assert
   expect(log).toMatchInlineSnapshot(`
-Array [
+[
   "Initial state (no one online)",
   "| INVOKE selectOnlineUsers",
   "| | COMPUTE selectOnlineUsers [first run]",
@@ -224,13 +225,13 @@ test('introspection api', () => {
   Object.assign(selector, { displayName: 'selector' })
   expect(selector({ a: 2, b: 3 })).toEqual(8)
   expect(selector.introspect()).toMatchInlineSnapshot(`
-Object {
-  "dependencies": Map {
-    [Function selectA] => 2,
-    [Function selectB] => 3,
-  },
-  "stateVersion": 1,
-  "value": 8,
-}
-`)
+    {
+      "dependencies": Map {
+        [Function selectA] => 2,
+        [Function selectB] => 3,
+      },
+      "stateVersion": 1,
+      "value": 8,
+    }
+  `)
 })

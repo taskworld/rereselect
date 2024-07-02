@@ -1,4 +1,4 @@
-export declare type SelectorContext<State> = {
+export type SelectorContext<State> = {
     /**
      * makeSelector creates a selector based on given selectionLogic.
      *
@@ -36,12 +36,12 @@ export declare type SelectorContext<State> = {
 /**
  * Selector selects some data from the state tree.
  */
-export declare type Selector<State, Result> = (state: State) => Result;
+export type Selector<State, Result> = (state: State) => Result;
 /**
  * EnhancedSelector is a selector function returned by `makeSelector`.
  * It comes with extra methods to help you introspect.
  */
-export declare type EnhancedSelector<State, Result> = Selector<State, Result> & {
+export type EnhancedSelector<State, Result> = Selector<State, Result> & {
     selectionLogic: SelectionLogic<State, Result>;
     /**
      * recomputations returns the number of times this selector
@@ -59,7 +59,7 @@ export declare type EnhancedSelector<State, Result> = Selector<State, Result> & 
      */
     introspect(): InternalSelectorState<State, Result> | undefined;
 };
-declare type InternalSelectorState<State, Result> = {
+type InternalSelectorState<State, Result> = {
     stateVersion: number;
     value: Result;
     dependencies: Map<Selector<State, any>, any>;
@@ -70,18 +70,18 @@ declare type InternalSelectorState<State, Result> = {
  * By doing so, the dependencies between selectors will be tracked
  * automatically.
  */
-export declare type SelectionLogic<State, Result> = (
+export type SelectionLogic<State, Result> = (
 /**
  * Executes another selector and mark it as a dependency.
  */
 query: QueryFunction<State>) => Result;
-export declare type InvocationWrapper<State> = (executeSelector: () => any, selector: EnhancedSelector<State, any>, state: State) => any;
-export declare type ComputationWrapper<State> = (computeResult: () => any, selector: EnhancedSelector<State, any>, state: State, reason: Selector<State, any> | undefined) => any;
+export type InvocationWrapper<State> = (executeSelector: () => any, selector: EnhancedSelector<State, any>, state: State) => any;
+export type ComputationWrapper<State> = (computeResult: () => any, selector: EnhancedSelector<State, any>, state: State, reason: Selector<State, any> | undefined) => any;
 /**
  * QueryFunction can be used to invoke another selector and mark
  * that selector as a dependency.
  */
-export declare type QueryFunction<State> = {
+export type QueryFunction<State> = {
     <Result>(selector: Selector<State, Result>): Result;
     /**
      * The earliest selector that caused the selector result to be
