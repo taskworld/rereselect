@@ -1,18 +1,5 @@
 # rereselect
 
-[![npm package][npm-badge]][npm] [![CircleCI builds][build-badge]][build]
-[![Codecov][cov-badge]][cov]
-
-[build-badge]:
-  https://img.shields.io/circleci/project/github/taskworld/rereselect/master.svg?style=for-the-badge
-[build]: https://circleci.com/gh/taskworld/rereselect
-[npm-badge]:
-  https://img.shields.io/npm/v/@taskworld.com/rereselect.svg?style=for-the-badge
-[npm]: https://www.npmjs.com/package/@taskworld.com/rereselect
-[cov-badge]:
-  https://img.shields.io/codecov/c/github/taskworld/rereselect/master.svg?style=for-the-badge
-[cov]: https://codecov.io/gh/taskworld/rereselect/src/master/src/index.ts
-
 > Not to be confused with
 > [Re-reselect](https://github.com/toomuchdesign/re-reselect) which is an
 > enhancement to [Reselect](https://github.com/reduxjs/reselect). This is an
@@ -32,14 +19,14 @@ A library that generates memoized selectors like
 
 **Notes:**
 
-- Requires an ES6 environment (or babel-polyfill).
-- TypeScript typings require TypeScript 3.0.
+- The running environment must be at least ECMAScript 6 (ES2015).
+- TypeScript typings are available.
 - The state must be immutable.
 - The selector logic must be pure and deterministic.
 - rereselect’s selectors take 1 argument only — the state. If you need
   parameterized selectors, see the section
   [parameterized selectors](#parameterized-selectors).
-- **No support.** This library is created to solve the problems we face. We
+- _Zero maintenance support_. This library is created to solve the problems we face. We
   open-source it in hope that it will be useful to others as well, but we have
   no plans in supporting it beyond our use cases. Therefore, feature requests
   are not accepted here.
@@ -178,18 +165,13 @@ function createSelector(...funcs) {
 
 ### Performance comparison
 
-As of `v0.3.0`, in “cache hit” scenarios, rereselect is faster than Reselect in
-ES6 environment.
+In “cache hit” scenarios, **rereselect** is faster than **Reselect**. The numbers below are in million-operation-per-second.
 
-| Scenario                         |        Reselect | rereselect<br />ES6 | rereselect<br />ES5 |
-| -------------------------------- | --------------: | ------------------: | ------------------: |
-| Cache hit (same state)           | 20,179,150 op/s |     28,732,249 op/s |     25,217,954 op/s |
-| Cache hit (shallowly equal deps) |  4,510,002 op/s |     12,158,890 op/s |      2,958,739 op/s |
-| Cache miss                       |  2,966,281 op/s |      2,439,733 op/s |      1,631,106 op/s |
-
-Performance benchmarks are run as part of
-[CI build](https://circleci.com/gh/taskworld/rereselect). You can check out the
-latest results there.
+| Scenario | Reselect v3 | Reselect v5 | rereselect |
+|---|---|---|---|
+| cache hit (same state) | 15.6 | 16.6 | 17.1 |
+| cache hit (shallowly equal deps) | 5.5 | 1.1 | 7.6~9.8 |
+| cache miss | 3.9 | 0.5 | 3.8 |
 
 ## Build your own abstraction
 

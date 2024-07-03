@@ -1,0 +1,11 @@
+post-checkout:
+  commands:
+    install:
+      run: pnpm install --silent
+pre-commit:
+  parallel: true
+  commands:
+    build:
+      run: pnpm run build && git add lib/*
+    test:
+      run: pnpm run test --run --typecheck.enabled

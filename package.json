@@ -1,34 +1,8 @@
 {
-  "scripts": {
-    "clean": "rm -rf lib lib-es6",
-    "test": "jest",
-    "test:cov": "jest --config jest.config.ts.js --coverage",
-    "test:watch": "jest --config jest.config.ts.js --watch",
-    "prepare": "yarn clean && tsc && tsc --build tsconfig.es6.json",
-    "benchmark": "matcha benchmark.js"
-  },
-  "devDependencies": {
-    "@types/jest": "^23.3.1",
-    "@types/lodash": "^4.14.116",
-    "@types/node": "^10.7.1",
-    "jest": "^23.5.0",
-    "lodash": "^4.17.10",
-    "matcha": "^0.7.0",
-    "prettier": "^1.14.2",
-    "reselect": "^3.0.1",
-    "ts-jest": "^23.1.4",
-    "typescript": "^3.0.1"
-  },
-  "name": "@taskworld.com/rereselect",
+  "name": "@taskworld/rereselect",
   "description": "A library that generates memoized selectors and supports dynamic dependency tracking.",
-  "version": "0.3.0",
-  "main": "lib/index.js",
-  "directories": {
-    "example": "examples",
-    "lib": "lib"
-  },
-  "dependencies": {},
-  "author": "Thai Pangsakulyanont <thai.p@taskworld.com> (http://dt.in.th/)",
+  "version": "1.0.0",
+  "author": "Taskworld <developers@taskworld.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -37,5 +11,27 @@
   "bugs": {
     "url": "https://github.com/taskworld/rereselect/issues"
   },
-  "homepage": "https://github.com/taskworld/rereselect#readme"
+  "homepage": "https://github.com/taskworld/rereselect#readme",
+  "packageManager": "pnpm@9.4.0",
+  "main": "lib/index.js",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "build": "rm -rf lib && tsc",
+    "test": "tsc --noEmit && vitest src/index.test.ts",
+    "bench": "vitest --run bench --mode production"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.17.6",
+    "lefthook": "^1.6.18",
+    "lodash": "^4.17.21",
+    "reselect3": "npm:reselect@^3.0.1",
+    "reselect5": "npm:reselect@^5.0.0",
+    "typescript": "^5.5.3",
+    "vitest": "^1.6.0"
+  },
+  "resolutions": {
+    "jsdom": "16.5.0"
+  }
 }
